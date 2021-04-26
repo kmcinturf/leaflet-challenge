@@ -4,26 +4,40 @@ var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/signif
 // d3.json(queryUrl, function(data) {
 //   createMarkers(data.features);
 // });
-var newYorkCoords = [40.73, -74.0059];
-var mapZoomLevel = 12;
+// var newYorkCoords = [52.37, 9.73];
+// var mapZoomLevel = -550000000;
+
 
 
 function createMap(response)
 
 {
 
-
   var features = response.features
   // Check if data got pulled in.
   console.log(features)
-
+  function getValue(x) {
+    if(x > -10 & x <= 10) {return "green"}
+     if(x > 10 & x <= 30) {return "yellow"}
+     if (x > 30  & x <= 50) {return "orange"}
+     if(x > 50 & x <= 70) {return "red"}
+     if(x > 70 & x <= 90) {return "brown"}
+     if(x >= 90) {return "black"} 
+ 
+  }
 
  // Create Marker Group
  featureMarkers = features.map(feature =>
-  {
-    // return L.marker([feature.properties.place]).bindPopup("<h3>" + feature.properties.place + "<h3><h3>Place: " + feature.properties.mag + "</h3>")
-
-     return L.marker([feature.geometry.coordinates]).bindPopup("<h3>" + feature.properties.place + "<h3><h3>Place: " + feature.properties.mag + "</h3>")
+  
+   
+     L.circleMarker([feature.geometry.coordinates[1],feature.geometry.coordinates[0]], {
+      color: "red",
+      fillColor: getValue(feature.geometry.coordinates[2]),
+      fillOpacity: .75,
+      radius: feature.properties.mag
+    },
+      
+    ).bindPopup("<h3>" + feature.properties.place + "<h3><h3>Place: " + feature.properties.mag + "</h3>") 
     // function onEachFeature(feature, layer) {
     //   layer.bindPopup("<h3>" + feature.properties.place +
     //     "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
@@ -33,7 +47,7 @@ function createMap(response)
     // // Run the onEachFeature function once for each piece of data in the array
     // var earthquakes = L.geoJSON(features, {
     //   onEachFeature: onEachFeature
-    });
+    );
     // function onEachFeature(feature, layer) {
     //   layer.bindPopup("<h3>" + feature.properties.place +
     //     "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
@@ -49,7 +63,7 @@ function createMap(response)
 
   
 
-  earthquakeFeatureGroup = L.geoJSON(featureMarkers)
+  earthquakeFeatureGroup = L.layerGroup(featureMarkers)
  // //////////
 
 
@@ -74,8 +88,8 @@ function createMap(response)
 
   // Create the map object with options
   var map = L.map("map-id", {
-    center: [40.73, -74.0059],
-    zoom: 12,
+    center: [52.37, 9.73],
+    zoom: 5,
     layers: [lightmap, earthquakeFeatureGroup]
   });
 
@@ -83,43 +97,89 @@ function createMap(response)
   L.control.layers(baseMaps, overlayMaps, {
     collapsed: false
   }).addTo(map);
+  var legend = L.control({position: 'bottomright'});
+
+  legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [-10, 10, 30, 50, 70, 90],
+        labels = ['<strong> Earthquake Depth </strong>'],
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML += '<strong> Earthquake Depth (km) </strong>'
+        div.innerHTML +=
+            '<i style="background:' + getValue(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(map);
+  
+ 
+  
+
+  
 }
-
-
-
-// // Perform an API call to the Earthquake  API to get signicant month data . Call createMarkers when complete
-
-
 
 d3.json(queryUrl).then(createMap);
 
+// // Perform an API call to the Earthquake  API to get signicant month data . Call createMarkers when complete
+// function updateLegend(x) {
+//   document.querySelector(".legend").innerHTML = [
+//     "<p>Earthquake x: " +feature.geometry.coordinates[2](x) + "</p>",
+//     "<p class='out-of-order'>Out of Order Stations: " + stationCount.OUT_OF_ORDER + "</p>",
 
-// Define arrays to hold created city and state markers
-var depthMarkers = [];
-var magnatideMarkers = [];
+//   ].join("");
+  
+// }
 
-// Loop through locations and create city and state markers
-for (var i = 0; i < locations.length; i++) {
-  // Setting the marker radius for the state by passing population into the markerSize function
-  depthMarkers.push(
-    L.circle(feature[i].geometry.coordinates, {
-      stroke: false,
-      fillOpacity: 0.75,
-      color: "white",
-      fillColor: "white",
-      radius: markerSize(feature[i].geometry.population)
-    })
-  );
+// Set up the legend
 
-  // Setting the marker radius for the city by passing population into the markerSize function
-  magnatideMarkers.push(
-    L.circle(feature[i].geometry.coordinates, {
-      stroke: false,
-      fillOpacity: 0.75,
-      color: "purple",
-      fillColor: "purple",
-      radius: markerSize(feature[i].geometry.mag)
-    })
-  );
-}
+
+  // Adding legend to the map
+  
+// function updateLegend(x) {
+//   document.querySelector(".legend").innerHTML = [
+//     "<p>Updated: " + moment.unix(time).format("h:mm:ss A") + "</p>",
+//     "<p class='out-of-order'>Out of Order Stations: " + stationCount.OUT_OF_ORDER + "</p>",
+//   ].join("");
+// }
+
+
+
+
+
+
+// // Define arrays to hold created city and state markers
+// var xMarkers = [];
+// var magnatideMarkers = [];
+
+// // Loop through locations and create city and state markers
+// for (var i = 0; i < locations.length; i++) {
+//   // Setting the marker radius for the state by passing population into the markerSize function
+//   xMarkers.push(
+//     L.circle(feature[i].geometry.coordinates, {
+//       stroke: false,
+//       fillOpacity: 0.75,
+//       color: "white",
+//       x: "white",
+//       radius: markerSize(feature[i].geometry.population)
+//     })
+//   );
+
+//   // Setting the marker radius for the city by passing population into the markerSize function
+//   magnatideMarkers.push(
+//     L.circle(feature[i].geometry.coordinates, {
+//       stroke: false,
+//       fillOpacity: 0.75,
+//       color: "purple",
+//       x: "purple",
+//       radius: markerSize(feature[i].geometry.mag)
+//     })
+//   );
+// }
 
